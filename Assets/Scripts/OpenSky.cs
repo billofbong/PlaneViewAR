@@ -24,7 +24,7 @@ public class OpenSky : MonoBehaviour
     void Update()
     {
         timer += Time.deltaTime;
-        gameObject.GetComponent<UnityEngine.UI.Text>().text = timer.ToString();// Location.GetUserCoords().ToString("F5");
+        gameObject.GetComponent<UnityEngine.UI.Text>().text = Location.GetUserCoords().ToString("F5");
 
         if (timer > queryFrequency)
         {
@@ -85,6 +85,7 @@ public class OpenSky : MonoBehaviour
         for (int i = 0; i < allAircraft.Count; i++)
         {
             yield return null;
+            Debug.Log(allAircraft[i].callsign);
             if (allAircraft[i].lastSeen < timeNow)
             {
                 allAircraft.RemoveAt(i);
@@ -118,6 +119,17 @@ public class OpenSky : MonoBehaviour
     public List<Aircraft> GetAircraftList()
     {
         return allAircraft;
+    }
+
+    /**
+     * GetAircraftByCallsign()
+     * Returns: Aircraft: First aircraft in the list with a callsign that matches. Works with partial matches
+     * Parameters:
+     *     string callsign: The callsign to search for
+     */
+    public Aircraft GetAircraftByCallsign(string callsign)
+    {
+        return allAircraft.Find(x => x.callsign == callsign);
     }
 
     /**

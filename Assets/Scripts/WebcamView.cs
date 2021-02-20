@@ -5,15 +5,13 @@ using UnityEngine.UI;
 
 public class WebcamView : MonoBehaviour
 {
-    public WebCamTexture webCamTexture;
-    public RawImage rawImage;
+    private WebCamTexture webCamTexture;
+    public Renderer renderer;
 
     // Start is called before the first frame update
     void Start()
     {
         webCamTexture = new WebCamTexture();
-        //rawImage.texture = webCamTexture;
-        //rawImage.material.mainTexture = webCamTexture;
         WebCamDevice[] devices = WebCamTexture.devices;
         for (int i = 0; i < devices.Length; i++)
         {
@@ -21,6 +19,7 @@ public class WebcamView : MonoBehaviour
         }
 
         webCamTexture.deviceName = devices[1].name;
+        renderer.material.mainTexture = webCamTexture;
         webCamTexture.Play();
     }
 

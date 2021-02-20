@@ -304,8 +304,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9cb0918514f4de448fc8368be3238f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  webCamTexture: {fileID: 0}
-  rawImage: {fileID: 0}
+  renderer: {fileID: 1674117665}
 --- !u!64 &1674117664
 MeshCollider:
   m_ObjectHideFlags: 0

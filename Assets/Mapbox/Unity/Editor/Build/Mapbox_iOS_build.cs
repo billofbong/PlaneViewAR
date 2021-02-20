@@ -23,7 +23,7 @@ namespace Mapbox.Editor.Build
 
 				var file = File.ReadAllText(projPath);
 				proj.ReadFromString(file);
-				string target = proj.GetUnityMainTargetGuid();
+				string target = proj.GetUnityFrameworkTargetGuid();
 
 				var defaultIncludePath = "Mapbox/Core/Plugins/iOS/MapboxMobileEvents/include";
 				var includePaths = Directory.GetDirectories(Application.dataPath, "include", SearchOption.AllDirectories);

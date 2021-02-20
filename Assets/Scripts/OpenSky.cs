@@ -3,43 +3,88 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class OpenSky : MonoBehaviour
 {
     public int queryFrequency; // how many seconds between each query
     public int queryDistance; // distance to search in miles 
 
-    private float timer = 10; // time since last query
+    private float timer; // time since last query
     private const float MILES_TO_LAT = 0.0144927536232f; // 1/69, One degree of latitude = ~69mi
     private bool found = false;
+    private List<Aircraft> allAircraft;
 
     void Start()
     {
-
+        allAircraft = new List<Aircraft>();
+        StartCoroutine(Location.Start());
     }
 
     void Update()
     {
         timer += Time.deltaTime;
-        if(!found)
-            gameObject.GetComponent<UnityEngine.UI.Text>().text = timer.ToString();
+        gameObject.GetComponent<UnityEngine.UI.Text>().text = timer.ToString();// Location.GetUserCoords().ToString("F5");
 
         if (timer > queryFrequency)
         {
             found = true;
-            Query(queryDistance);
+            StartCoroutine(Query(queryDistance));
+            timer = 0;
         }
     }
 
-    private void Query(int queryRadius)
+    private IEnumerator Query(int queryDistance)
     {
-        LatLongBBox bbox = LatLongBoundingBox(new Vector2(37.287659f, -121.942429f), queryDistance);
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(string.Format("https://opensky-network.org/api/states/all?lamin={0}&lamax={1}&lomin={2}&lomax={3}",
-            bbox.minLat, bbox.maxLat, bbox.minLong, bbox.maxLong));
-        HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-        StreamReader reader = new StreamReader(response.GetResponseStream());
-        string jsonResponse = reader.ReadToEnd();
-        gameObject.GetComponent<UnityEngine.UI.Text>().text = jsonResponse;
+        LatLongBBox bbox = LatLongBoundingBox(Location.GetUserCoords(), queryDistance);
+        string jsonResponse = "";
+        using (UnityWebRequest request = UnityWebRequest.Get(string.Format("https://opensky-network.org/api/states/all?lamin={0}&lamax={1}&lomin={2}&lomax={3}",
+            bbox.minLat, bbox.maxLat, bbox.minLong, bbox.maxLong)))
+        {
+            yield return request.SendWebRequest();
+            jsonResponse = request.downloadHandler.text;
+        }
+        string states = jsonResponse.Split(new[] { "states\":[" }, System.StringSplitOptions.None)[1];
+        string[] aircraft = states.Split(new[] { "],[" }, System.StringSplitOptions.None);
+        float timeNow = Time.time;
+        foreach(string x in aircraft)
+        {
+            string[] attributes = x.Replace("[", "").Replace("\"", "").Replace("]]}", "").Trim().Split(','); // remove [ " and ]]} from the strings then split into an array at ,
+            try
+            {
+                Aircraft a = allAircraft[allAircraft.FindIndex(y => y.callsign == attributes[1])];
+                a.latitude = float.Parse(attributes[6]); // https://opensky-network.org/apidoc/rest.html
+                a.longitude = float.Parse(attributes[5]);
+                a.altitude = string.Equals(attributes[7], "null") ? float.NaN : float.Parse(attributes[7]); // sometimes these values are null (eg. if aircraft on ground)
+                a.velocity = string.Equals(attributes[9], "null") ? float.NaN : float.Parse(attributes[9]);
+                a.true_track = string.Equals(attributes[11], "null") ? float.NaN : float.Parse(attributes[11]);
+                a.lastSeen = timeNow;
+            }
+            catch(System.ArgumentOutOfRangeException)
+            {
+                Aircraft a = new Aircraft
+                {
+                    callsign = attributes[1],
+                    latitude = float.Parse(attributes[6]),
+                    longitude = float.Parse(attributes[5]),
+                    altitude = string.Equals(attributes[7], "null") ? float.NaN : float.Parse(attributes[7]),
+                    velocity = string.Equals(attributes[9], "null") ? float.NaN : float.Parse(attributes[9]),
+                    true_track = string.Equals(attributes[11], "null") ? float.NaN : float.Parse(attributes[11]),
+                    lastSeen = timeNow
+                };
+                allAircraft.Add(a);
+            }
+        }
+        for (int i = 0; i < allAircraft.Count; i++)
+        {
+            yield return null;
+            if (allAircraft[i].lastSeen < timeNow)
+            {
+                allAircraft.RemoveAt(i);
+                i--; // have to check the same index again now everything has shifted left
+            }
+        }
+        yield return null;
     }
 
     /**
@@ -59,15 +104,20 @@ public class OpenSky : MonoBehaviour
         return bbox;
     }
 
+    public List<Aircraft> GetAircraftList()
+    {
+        return allAircraft;
+    }
+
     float LengthOfLonDegreeAt(float lat)
     {
         return Mathf.Abs(Mathf.Cos(lat)) * 69.172f; // Length of 1 degree of Longitude = cosine(latitude in decimal degrees) * length of degree (miles) at equator.
     }
 
-    struct Aircraft
+    public class Aircraft
     {
-        float longitude, last_longitude, latitude, last_latitude;
-        int altitude, last_altitude;
+        public string callsign;
+        public float longitude, latitude, altitude, last_altitude, velocity, true_track, vertical_rate, lastSeen;
     }
 
     struct LatLongBBox

@@ -1,18 +1,20 @@
 ﻿using System.Collections;
 using UnityEngine;
 
-public class Location : MonoBehaviour
+public class Location
 {
     /**
      * Start()
      * Initialize location services
      */
-    IEnumerator Start()
+    public static IEnumerator Start()
     {
+
+        yield return new WaitForSeconds(5);
+
         if (!Input.location.isEnabledByUser)
             yield break;
-
-        Input.location.Start();
+        Input.location.Start(1);
 
         int maxWait = 20; // wait 20 seconds max to start location services
         while(Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
@@ -23,18 +25,18 @@ public class Location : MonoBehaviour
 
         if(maxWait < 1)
         {
-            print("Timed out while initializing location!");
+            Debug.Log("Timed out while initializing location!");
             yield break;
         }
 
         if(Input.location.status == LocationServiceStatus.Failed)
         {
-            print("Unable to determine device location!");
+            Debug.Log("Unable to determine device location!");
             yield break;
         }
         else
         {
-            print("Location initialized successfully.");
+            Debug.Log("Location initialized successfully.");
         }
     }
 
@@ -60,14 +62,5 @@ public class Location : MonoBehaviour
     public static bool LocationAvailable()
     {
         return Input.location.status == LocationServiceStatus.Running;
-    }
-
-    /**
-     * OnApplicationQuit()
-     * Stop location service when application stops
-     */
-    void OnApplicationQuit()
-    {
-        Input.location.Stop();
     }
 }

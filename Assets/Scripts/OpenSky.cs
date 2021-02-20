@@ -34,6 +34,13 @@ public class OpenSky : MonoBehaviour
         }
     }
 
+    /**
+     * Query()
+     * Coroutine to query the OpenSky REST API to get aircraft within a certain distance. Updates allAircraft list. Should not be run except from Update().
+     * Returns: IEnumerator
+     * Parameters: 
+     *     int queryDistance: Great circle distance to one edge of a bounding box to search for aircraft in
+     */
     private IEnumerator Query(int queryDistance)
     {
         LatLongBBox bbox = LatLongBoundingBox(Location.GetUserCoords(), queryDistance);
@@ -104,12 +111,22 @@ public class OpenSky : MonoBehaviour
         return bbox;
     }
 
+    /**
+     * GetAircraftList()
+     * Returns: List<Aircraft>: All aircraft found by the latest query.
+     */
     public List<Aircraft> GetAircraftList()
     {
         return allAircraft;
     }
 
-    float LengthOfLonDegreeAt(float lat)
+    /**
+     * LengthOfLonDegreeAt()
+     * Returns: Great circle distance of one degree of longitude at a given latitude
+     * Parameters:
+     *     float lat: Latitude at which to find the distance of one degree of longitude
+     */
+    private float LengthOfLonDegreeAt(float lat)
     {
         return Mathf.Abs(Mathf.Cos(lat)) * 69.172f; // Length of 1 degree of Longitude = cosine(latitude in decimal degrees) * length of degree (miles) at equator.
     }
@@ -120,7 +137,7 @@ public class OpenSky : MonoBehaviour
         public float longitude, latitude, altitude, last_altitude, velocity, true_track, vertical_rate, lastSeen;
     }
 
-    struct LatLongBBox
+    private struct LatLongBBox
     {
         public float minLat, minLong, maxLat, maxLong;
     }

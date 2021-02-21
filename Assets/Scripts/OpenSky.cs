@@ -12,6 +12,8 @@ public class OpenSky : MonoBehaviour
     public int queryDistance; // distance to search in miles 
     public GameObject target;
     public Camera camera;
+    public GameObject objects;
+    public Text debugText;
 
     private float queryTimer; // time since last query
     private float calibrateTimer;
@@ -35,8 +37,10 @@ public class OpenSky : MonoBehaviour
         //gameObject.GetComponent<UnityEngine.UI.Text>().text = Location.GetUserCoords().ToString("F5");
         if (calibrateTimer > 2)
         {
-            float dNorth = camera.transform.rotation.eulerAngles.y - Location.GetCompassHeading();
-            camera.transform.Rotate(0, -dNorth, 0, Space.World);
+            float effectiveAngle = camera.transform.eulerAngles.y - objects.transform.eulerAngles.y;
+            float deltaNorth = effectiveAngle - Location.GetCompassHeading();
+            objects.transform.rotation = Quaternion.Euler(0, deltaNorth, 0);
+            debugText.text = "eA: " + effectiveAngle + "\ndN: " + deltaNorth + "\nHDG: " + Location.GetCompassHeading();
             calibrateTimer = 0;
         }
         if (queryTimer > queryFrequency)
@@ -54,8 +58,8 @@ public class OpenSky : MonoBehaviour
             }
             foreach (Aircraft a in allAircraft)
             {
-                GameObject newTarget = (GameObject)Instantiate(target, a.normalizedPosition, Quaternion.identity);
-                Debug.Log("Instantiating at " + a.normalizedPosition.ToString());
+                GameObject newTarget = (GameObject)Instantiate(target, objects.transform);
+                newTarget.transform.localPosition = a.normalizedPosition;
                 newTarget.transform.LookAt(camera.transform);
                 newTarget.transform.Rotate(Vector3.up, 90);
                 Text textField = newTarget.transform.Find("Canvas/Text").gameObject.GetComponent<Text>();

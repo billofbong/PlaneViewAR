@@ -5,10 +5,15 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/AR Test.unity
     guid: 636e49d7c86d74254ab7abfd250c6b4c
+  - enabled: 1
+    path: Assets/Main Scene.unity
+    guid: f17a905161a1cf24db5c426533e6b205
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 58254d8ff0edb4b11a7b6c33ded8ee23, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: bd0d0549324de6f448244cbe9eada83f, type: 2}
+    com.unity.xr.magicleap.magic_leap_settings: {fileID: 11400000, guid: 72b57b6e90aaf914f8daad9a479f65ef, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 008f68afaf9f3467798dfff097f70342, type: 2}
+    xr.sdk.mock-hmd.settings: {fileID: 11400000, guid: 41d11701532230744b12aa0e3c8e5734, type: 2}

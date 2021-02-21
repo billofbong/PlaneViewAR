@@ -129,8 +129,10 @@ PlayerSettings:
     Others: 1
   bundleVersion: 0.1
   preloadedAssets:
-  - {fileID: 4800000, guid: e7c77f6eaab324a819efdc13b8125a39, type: 3}
-  - {fileID: 2078591971723311249, guid: 008f68afaf9f3467798dfff097f70342, type: 2}
+  - {fileID: 11400000, guid: 72b57b6e90aaf914f8daad9a479f65ef, type: 2}
+  - {fileID: 11400000, guid: 41d11701532230744b12aa0e3c8e5734, type: 2}
+  - {fileID: 410187166853349032, guid: 008f68afaf9f3467798dfff097f70342, type: 2}
+  - {fileID: 4800000, guid: c9f956787b1d945e7b36e0516201fc76, type: 3}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -149,6 +151,7 @@ PlayerSettings:
   androidMaxAspectRatio: 2.1
   applicationIdentifier:
     Android: com.DefaultCompany.PlaneViewAR
+    Standalone: com.DefaultCompany.PlaneViewAR
     iPhone: com.DefaultCompany.PlaneViewAR
   buildNumber:
     Standalone: 0

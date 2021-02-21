@@ -4,19 +4,26 @@ using System.IO;
 using System.Net;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.UI;
 
 public class OpenSky : MonoBehaviour
 {
     public int queryFrequency; // how many seconds between each query
     public int queryDistance; // distance to search in miles 
+    public GameObject target;
+    public Camera camera;
 
     private float timer; // time since last query
     private const float MILES_TO_LAT = 0.0144927536232f; // 1/69, One degree of latitude = ~69mi
+    private const float MILES_TO_METERS = 1609.34f;
     private List<Aircraft> allAircraft;
+    private List<GameObject> targets;
+    private bool queryDone = false;
 
     void Start()
     {
         allAircraft = new List<Aircraft>();
+        targets = new List<GameObject>();
         StartCoroutine(Location.Start());
     }
 
@@ -29,9 +36,26 @@ public class OpenSky : MonoBehaviour
         {
             timer = 0;
             StartCoroutine(Query(queryDistance));
-            gameObject.GetComponent<UnityEngine.UI.Text>().text = allAircraft[0].callsign + " " 
-                + GetDistanceBetween(Location.GetUserCoords(), allAircraft[0].position).ToString("F2") + "mi " 
-                + GetAngleBetween(Location.GetUserCoords(), allAircraft[0].position).ToString("F2");
+        }
+        if(queryDone)
+        {
+            if (targets.Count > 0)
+            {
+                foreach (GameObject x in targets)
+                    x.Destroy();
+                targets.Clear();
+            }
+            foreach (Aircraft a in allAircraft)
+            {
+                GameObject newTarget = (GameObject)Instantiate(target, a.normalizedPosition, Quaternion.identity);
+                Debug.Log("Instantiating at " + a.normalizedPosition.ToString());
+                newTarget.transform.LookAt(camera.transform);
+                newTarget.transform.Rotate(Vector3.up, 90);
+                Text textField = newTarget.transform.Find("Canvas/Text").gameObject.GetComponent<Text>();
+                textField.text = a.callsign;
+                targets.Add(newTarget);
+            }
+            queryDone = false;
         }
     }
 
@@ -52,7 +76,15 @@ public class OpenSky : MonoBehaviour
             yield return request.SendWebRequest();
             jsonResponse = request.downloadHandler.text;
         }
-        string states = jsonResponse.Split(new[] { "states\":[" }, System.StringSplitOptions.None)[1];
+        string states;
+        try
+        {
+            states = jsonResponse.Split(new[] { "states\":[" }, System.StringSplitOptions.None)[1];
+        }
+        catch(System.IndexOutOfRangeException e)
+        {
+            yield break;
+        }
         string[] aircraft = states.Split(new[] { "],[" }, System.StringSplitOptions.None);
         float timeNow = Time.time;
         foreach(string x in aircraft)
@@ -84,17 +116,18 @@ public class OpenSky : MonoBehaviour
         for (int i = 0; i < allAircraft.Count; i++)
         {
             float bearing = GetAngleBetween(Location.GetUserCoords(), allAircraft[i].position);
-            float distance = GetDistanceBetween(Location.GetUserCoords(), allAircraft[i].position);
-            Vector3 v = new Vector3(Mathf.Sin(Mathf.Deg2Rad * bearing) * distance, allAircraft[i].altitude / 1000, Mathf.Cos(Mathf.Deg2Rad * bearing) * distance);
-            Debug.DrawLine(new Vector3(0, 0, 0), v, Color.red, 10f); 
-
-            Debug.Log(allAircraft[i].callsign + " " + bearing.ToString("F2") + " " + distance.ToString("F2") + "mi" + " " + allAircraft[i].altitude);
+            float distance = GetDistanceBetween(Location.GetUserCoords(), allAircraft[i].position) * MILES_TO_METERS;
+            Vector3 v = new Vector3(Mathf.Sin(Mathf.Deg2Rad * bearing) * distance, allAircraft[i].altitude, Mathf.Cos(Mathf.Deg2Rad * bearing) * distance).normalized * 10;
+            allAircraft[i].normalizedPosition = v;
             if (allAircraft[i].lastSeen < timeNow - 9)
             {
                 allAircraft.RemoveAt(i);
                 i--; // have to check the same index again now everything has shifted left
             }
+            else
+                Debug.DrawLine(new Vector3(0, 0, 0), v, Color.red, 10f);
         }
+        queryDone = true;
     }
 
     /**
@@ -177,6 +210,7 @@ public class OpenSky : MonoBehaviour
         public string callsign;
         public float altitude, velocity, true_track, vertical_rate, lastSeen;
         public Vector2 position;
+        public Vector3 normalizedPosition;
     }
 
     private struct LatLongBBox

@@ -5,7 +5,20 @@ using UnityEngine;
 public class MovePlane : MonoBehaviour
 {
     // The target to travel towards.
-    public Transform target;
+    public Transform target
+    {
+        get
+        {
+            return target;
+        }
+
+        set
+        {
+            target = value;
+            targetHit = false;
+            lerpPct = 0f;
+        }
+    }
 
     // The velocity of the plane.
     public float velocity = 39f;
@@ -39,7 +52,7 @@ public class MovePlane : MonoBehaviour
         {
             targetHit = true;
             startTarget = target;
-            lerpPct = 0;
+            lerpPct = 0f;
         }
     }
 }

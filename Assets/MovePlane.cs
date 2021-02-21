@@ -20,11 +20,11 @@ public class MovePlane : MonoBehaviour
         }
     }
 
-    // The velocity of the plane.
+    // The velocity of the plane. Not sure if this is useful.
     public float velocity = 39f;
 
-    // The rate of how much the plane will turn in any direction per second in degrees.
-    public float rateOfTurn = 2f;
+    // The amount of time it takes to complete one lerp.
+    public float time = 10f;
 
     private Transform startTarget;
 
@@ -41,7 +41,7 @@ public class MovePlane : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-        lerpPct += Time.deltaTime / 10f;
+        lerpPct += Time.deltaTime / time;
         if (targetHit == false)
         {
             transform.position = Vector3.Lerp(startTarget.position, target.position, lerpPct);

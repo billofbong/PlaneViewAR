@@ -13,7 +13,8 @@ public class OpenSky : MonoBehaviour
     public GameObject target;
     public Camera camera;
     public GameObject objects;
-    public Text debugText;
+    public Text rangeText;
+    public Slider rangeSlider;
 
     private float queryTimer; // time since last query
     private float calibrateTimer;
@@ -29,6 +30,7 @@ public class OpenSky : MonoBehaviour
         allAircraft = new List<Aircraft>();
         targets = new List<GameObject>();
         StartCoroutine(Location.Start());
+        rangeSlider.onValueChanged.AddListener(delegate { ChangeRange(); });
     }
 
     void Update()
@@ -40,7 +42,6 @@ public class OpenSky : MonoBehaviour
         {
             float deltaNorth = Location.GetCompassHeading() - camera.transform.rotation.eulerAngles.y;
             objects.transform.rotation = Quaternion.Euler(0, -deltaNorth, 0);
-            debugText.text = "HDG: " + Location.GetCompassHeading() + "\nObjR: " + objects.transform.rotation.eulerAngles.y.ToString();
             calibrated = true;
         }
         if (queryTimer > queryFrequency)
@@ -68,6 +69,12 @@ public class OpenSky : MonoBehaviour
             }
             queryDone = false;
         }
+    }
+
+    private void ChangeRange()
+    {
+        rangeText.text = rangeSlider.value.ToString() + "mi";
+        queryDistance = (int)(float)rangeSlider.value;
     }
 
     /**

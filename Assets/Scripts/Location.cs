@@ -63,4 +63,9 @@ public class Location
     {
         return Input.location.status == LocationServiceStatus.Running;
     }
+
+    public static float GetCompassHeading()
+    {
+        return Input.compass.trueHeading;
+    }
 }

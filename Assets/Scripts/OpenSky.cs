@@ -13,7 +13,8 @@ public class OpenSky : MonoBehaviour
     public GameObject target;
     public Camera camera;
 
-    private float timer; // time since last query
+    private float queryTimer; // time since last query
+    private float calibrateTimer;
     private const float MILES_TO_LAT = 0.0144927536232f; // 1/69, One degree of latitude = ~69mi
     private const float MILES_TO_METERS = 1609.34f;
     private List<Aircraft> allAircraft;
@@ -29,12 +30,18 @@ public class OpenSky : MonoBehaviour
 
     void Update()
     {
-        timer += Time.deltaTime;
+        queryTimer += Time.deltaTime;
+        calibrateTimer += Time.deltaTime;
         //gameObject.GetComponent<UnityEngine.UI.Text>().text = Location.GetUserCoords().ToString("F5");
-
-        if (timer > queryFrequency)
+        if (calibrateTimer > 2)
         {
-            timer = 0;
+            float dNorth = camera.transform.rotation.eulerAngles.y - Location.GetCompassHeading();
+            camera.transform.Rotate(0, -dNorth, 0, Space.World);
+            calibrateTimer = 0;
+        }
+        if (queryTimer > queryFrequency)
+        {
+            queryTimer = 0;
             StartCoroutine(Query(queryDistance));
         }
         if(queryDone)

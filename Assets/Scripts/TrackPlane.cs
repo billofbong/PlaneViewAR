@@ -20,7 +20,7 @@ public class TrackPlane : MonoBehaviour
     private float queryTimer; // time since last query
     private const float MILES_TO_LAT = 0.0144927536232f; // 1/69, One degree of latitude = ~69mi
     private const float MILES_TO_METERS = 1609.34f;
-    private const float METERS_TO_UNITS = 0.30f;
+    private const float METERS_TO_UNITS = 0.20f;
     private Aircraft ours;
     private Vector2 last_latlong;
     private AbstractMap map;

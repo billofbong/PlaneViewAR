@@ -8,9 +8,12 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/AR Test.unity
     guid: 636e49d7c86d74254ab7abfd250c6b4c
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/Main Scene.unity
-    guid: f17a905161a1cf24db5c426533e6b205
+    path: Assets/Mapbox Test.unity
+    guid: 629fca868bf60cd4db13e138a2e855ba
   m_configObjects:
     UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: 58254d8ff0edb4b11a7b6c33ded8ee23, type: 2}
     UnityEditor.XR.ARKit.ARKitSettings: {fileID: 11400000, guid: bd0d0549324de6f448244cbe9eada83f, type: 2}

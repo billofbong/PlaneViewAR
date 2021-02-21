@@ -9,7 +9,7 @@ using UnityEngine.UI;
 public class OpenSky : MonoBehaviour
 {
     public int queryFrequency; // how many seconds between each query
-    public int queryDistance; // distance to search in miles 
+    public int queryDistance; // distance to search in miles
     public GameObject target;
     public Camera camera;
     public GameObject objects;
@@ -22,6 +22,7 @@ public class OpenSky : MonoBehaviour
     private List<Aircraft> allAircraft;
     private List<GameObject> targets;
     private bool queryDone = false;
+    private bool calibrated = false;
 
     void Start()
     {
@@ -35,13 +36,12 @@ public class OpenSky : MonoBehaviour
         queryTimer += Time.deltaTime;
         calibrateTimer += Time.deltaTime;
         //gameObject.GetComponent<UnityEngine.UI.Text>().text = Location.GetUserCoords().ToString("F5");
-        if (calibrateTimer > 2)
+        if (calibrateTimer > 10 && !calibrated)
         {
-            float effectiveAngle = camera.transform.eulerAngles.y - objects.transform.eulerAngles.y;
-            float deltaNorth = effectiveAngle - Location.GetCompassHeading();
-            objects.transform.rotation = Quaternion.Euler(0, deltaNorth, 0);
-            debugText.text = "eA: " + effectiveAngle + "\ndN: " + deltaNorth + "\nHDG: " + Location.GetCompassHeading();
-            calibrateTimer = 0;
+            float deltaNorth = Location.GetCompassHeading() - camera.transform.rotation.eulerAngles.y;
+            objects.transform.rotation = Quaternion.Euler(0, -deltaNorth, 0);
+            debugText.text = "HDG: " + Location.GetCompassHeading() + "\nObjR: " + objects.transform.rotation.eulerAngles.y.ToString();
+            calibrated = true;
         }
         if (queryTimer > queryFrequency)
         {
@@ -74,7 +74,7 @@ public class OpenSky : MonoBehaviour
      * Query()
      * Coroutine to query the OpenSky REST API to get aircraft within a certain distance. Updates allAircraft list. Should not be run except from Update().
      * Returns: IEnumerator
-     * Parameters: 
+     * Parameters:
      *     int queryDistance: Great circle distance to one edge of a bounding box to search for aircraft in
      */
     private IEnumerator Query(int queryDistance)

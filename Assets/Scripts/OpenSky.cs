@@ -35,6 +35,18 @@ public class OpenSky : MonoBehaviour
 
     void Update()
     {
+        if (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
+        {
+            Ray raycast = camera.ScreenPointToRay(Input.GetTouch(0).position);
+            RaycastHit raycastHit;
+            if(Physics.Raycast(raycast, out raycastHit))
+            {
+                Aircraft a = allAircraft.Find(x => x.callsign == raycastHit.collider.gameObject.name);
+                Debug.Log(a.callsign);
+                StaticPlaneInfo.staticAircraft = a;
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Mapbox Test");
+            }
+        }
         queryTimer += Time.deltaTime;
         calibrateTimer += Time.deltaTime;
         //gameObject.GetComponent<UnityEngine.UI.Text>().text = Location.GetUserCoords().ToString("F5");
@@ -63,6 +75,8 @@ public class OpenSky : MonoBehaviour
                 newTarget.transform.localPosition = a.normalizedPosition;
                 newTarget.transform.LookAt(camera.transform);
                 newTarget.transform.Rotate(Vector3.up, 90);
+                newTarget.transform.Rotate(-90, 0, 0);
+                newTarget.name = a.callsign;
                 Text textField = newTarget.transform.Find("Canvas/Text").gameObject.GetComponent<Text>();
                 textField.text = a.callsign;
                 targets.Add(newTarget);

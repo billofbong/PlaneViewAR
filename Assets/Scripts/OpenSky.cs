@@ -128,8 +128,10 @@ public class OpenSky : MonoBehaviour
                 a.position = new Vector2(float.Parse(attributes[6]), float.Parse(attributes[5])); // https://opensky-network.org/apidoc/rest.html
                 a.altitude = string.Equals(attributes[7], "null") || float.Parse(attributes[7]) < 7 ? 0 : float.Parse(attributes[7]); // sometimes these values are null (eg. if aircraft on ground)
                 a.velocity = string.Equals(attributes[9], "null") ? 0 : float.Parse(attributes[9]);
-                a.true_track = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]);
-                a.lastSeen = timeNow;
+                a.true_track = string.Equals(attributes[10], "null") ? 0 : float.Parse(attributes[10]);
+                a.vertical_rate = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]);
+                if(!(a.altitude <= 0))
+                    a.lastSeen = timeNow;
             }
             catch(System.ArgumentOutOfRangeException)
             {
@@ -139,10 +141,12 @@ public class OpenSky : MonoBehaviour
                     position = new Vector2(float.Parse(attributes[6]), float.Parse(attributes[5])),
                     altitude = string.Equals(attributes[7], "null") ? 0 : float.Parse(attributes[7]),
                     velocity = string.Equals(attributes[9], "null") ? 0 : float.Parse(attributes[9]),
-                    true_track = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]),
+                    true_track = string.Equals(attributes[10], "null") ? 0 : float.Parse(attributes[10]),
+                    vertical_rate = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]),
                     lastSeen = timeNow
                 };
-                allAircraft.Add(a);
+                if(!(a.altitude <= 0))
+                    allAircraft.Add(a);
             }
         }
         for (int i = 0; i < allAircraft.Count; i++)

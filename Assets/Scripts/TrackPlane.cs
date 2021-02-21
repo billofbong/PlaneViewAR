@@ -20,11 +20,16 @@ public class TrackPlane : MonoBehaviour
     private float queryTimer; // time since last query
     private const float MILES_TO_LAT = 0.0144927536232f; // 1/69, One degree of latitude = ~69mi
     private const float MILES_TO_METERS = 1609.34f;
-    private const float METERS_TO_UNITS = 0.39005540974f;
+    private const float METERS_TO_UNITS = 0.30f;
     private Aircraft ours;
     private Vector2 last_latlong;
     private AbstractMap map;
     private bool queryDone = false;
+    private Vector3 newPos;
+    private Vector3 startingPos;
+    private bool lerp = false;
+    private float oldTrack;
+    private float lerpCounter;
 
     void Start()
     {
@@ -39,15 +44,30 @@ public class TrackPlane : MonoBehaviour
 
     void Update()
     {
-        aircraftObject.transform.position += transform.forward * METERS_TO_UNITS * ours.velocity * Time.deltaTime;
-        aircraftObject.transform.position += transform.up * METERS_TO_UNITS * ours.vertical_rate * Time.deltaTime;
+        if(lerp)
+        {
+            aircraftObject.transform.position = Vector3.Lerp(startingPos, newPos, lerpCounter);
+            aircraftObject.transform.eulerAngles = new Vector3(
+            aircraftObject.transform.eulerAngles.x,
+            Mathf.LerpAngle(oldTrack, ours.true_track, lerpCounter),
+            aircraftObject.transform.eulerAngles.z
+            );
+            lerpCounter += Time.deltaTime;
+            if(lerpCounter >= 1)
+            {
+                lerp = false;
+                lerpCounter = 0;
+            }
+        }
+        else
+            aircraftObject.transform.Translate(transform.forward * METERS_TO_UNITS * ours.velocity * Time.deltaTime);
+        aircraftObject.transform.Translate(transform.up * METERS_TO_UNITS * ours.vertical_rate * Time.deltaTime, Space.World);
         queryTimer += Time.deltaTime;
         if (queryTimer > queryFrequency)
         {
             queryTimer = 0;
             StartCoroutine(Query(queryDistance, ours.position));
         }
-        /*
         if (queryDone)
         {
             aircraftObject.transform.eulerAngles = new Vector3(
@@ -55,11 +75,13 @@ public class TrackPlane : MonoBehaviour
             ours.true_track,
             aircraftObject.transform.eulerAngles.z
             );
-            map.UpdateMap(new Vector2d(ours.position.x, ours.position.y));
-            Vector3 newPos = new Vector3(aircraftObject.transform.position.x, ours.altitude * METERS_TO_UNITS, aircraftObject.transform.position.z);
-            aircraftObject.transform.position = newPos;
+            startingPos = aircraftObject.transform.position;
+            oldTrack = aircraftObject.transform.rotation.eulerAngles.y;
+            newPos = map.GeoToWorldPosition(new Vector2d(ours.position.x, ours.position.y));
+            newPos.y = ours.altitude * METERS_TO_UNITS;
+            lerp = true;
             queryDone = false;
-        }*/
+        }
     }
 
     /**
@@ -100,7 +122,8 @@ public class TrackPlane : MonoBehaviour
                 ours.position = new Vector2(float.Parse(attributes[6]), float.Parse(attributes[5]));
                 ours.altitude = string.Equals(attributes[7], "null") ? 0 : float.Parse(attributes[7]);
                 ours.velocity = string.Equals(attributes[9], "null") ? 0 : float.Parse(attributes[9]);
-                ours.true_track = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]);
+                ours.true_track = string.Equals(attributes[10], "null") ? 0 : float.Parse(attributes[10]);
+                ours.vertical_rate = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]);
                 ours.lastSeen = timeNow;
             }
         }
@@ -148,7 +171,6 @@ public class TrackPlane : MonoBehaviour
         float brng = Mathf.Atan2(x, y);
         brng = Mathf.Rad2Deg * brng;
         brng = (brng + 360) % 360;
-        //brng = 360 - brng;
         return brng;
     }
 

@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<< HEAD:Assets/Materials/dirt.jpg.meta
-guid: 4342ea4265be8074cb7e0728f4ad3a3c
-=======
-guid: 5c190775f83c440468b0fc26963634e9
->>>>>>> AR-Location:Assets/3d Assets/target/Material.001_Base_Color.png.meta
+guid: 99ede4c7caafb5c43ace8a0c869e60c2
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}

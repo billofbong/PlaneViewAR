@@ -229,7 +229,7 @@ PrefabInstance:
     - target: {fileID: 114478715909612932, guid: e6b749c6d877f4c19a5a5c3c0783d53b, type: 3}
       propertyPath: _terrain._layerProperty.sideWallOptions.wallMaterial
       value: 
-      objectReference: {fileID: 2100000, guid: d12446246f55bc744a28f970a70027ec, type: 2}
+      objectReference: {fileID: 2100000, guid: 0b3445e336ed4e54097465e8cb6f4afc, type: 2}
     - target: {fileID: 114478715909612932, guid: e6b749c6d877f4c19a5a5c3c0783d53b, type: 3}
       propertyPath: _imagery._layerProperty.sourceOptions.layerSource.Name
       value: Satellite
@@ -439,7 +439,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 617332379}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 21, z: 980}
+  m_LocalPosition: {x: 0, y: 21, z: 1727.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1850070464}
@@ -480,7 +480,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 1
-  orthographic size: 1853.51
+  orthographic size: 1768.12
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2

@@ -41,5 +41,7 @@ public class MovePlane : MonoBehaviour
         {
             transform.Rotate(0, rateOfTurn * Time.deltaTime, 0);
         }
+
+        transform.position += transform.forward * velocity * Time.deltaTime;
     }
 }

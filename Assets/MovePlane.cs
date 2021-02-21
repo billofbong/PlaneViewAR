@@ -4,29 +4,16 @@ using UnityEngine;
 
 public class MovePlane : MonoBehaviour
 {
-    // The target to travel towards.
-    public Transform target
-    {
-        get
-        {
-            return target;
-        }
+    public Transform startTarget;
 
-        set
-        {
-            target = value;
-            targetHit = false;
-            lerpPct = 0f;
-        }
-    }
+    // The target to travel towards.
+    public Transform target;
 
     // The velocity of the plane. Not sure if this is useful.
     public float velocity = 39f;
 
     // The amount of time it takes to complete one lerp.
     public float time = 10f;
-
-    private Transform startTarget;
 
     private bool targetHit = false;
 
@@ -35,7 +22,7 @@ public class MovePlane : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        startTarget = transform;
+        //startTarget = transform;
     }
 
     // Update is called once per frame
@@ -54,5 +41,12 @@ public class MovePlane : MonoBehaviour
             startTarget = target;
             lerpPct = 0f;
         }
+    }
+
+    void setTarget(Transform target)
+    {
+        this.target = target;
+        targetHit = false;
+        lerpPct = 0f;
     }
 }

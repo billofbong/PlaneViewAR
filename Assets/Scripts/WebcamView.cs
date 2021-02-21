@@ -7,12 +7,13 @@ public class WebcamView : MonoBehaviour
 {
     private WebCamTexture webCamTexture;
     public Renderer renderer;
+    private WebCamDevice[] devices;
 
     // Start is called before the first frame update
     void Start()
     {
         webCamTexture = new WebCamTexture();
-        WebCamDevice[] devices = WebCamTexture.devices;
+        devices = WebCamTexture.devices;
         for (int i = 0; i < devices.Length; i++)
         {
             print(devices[i].name);

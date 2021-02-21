@@ -10,7 +10,7 @@ public class Location
     public static IEnumerator Start()
     {
 
-        yield return new WaitForSeconds(5);
+        //yield return new WaitForSeconds(5);
 
         if (!Input.location.isEnabledByUser)
             yield break;
@@ -36,6 +36,7 @@ public class Location
         }
         else
         {
+            Input.compass.enabled = true;
             Debug.Log("Location initialized successfully.");
         }
     }
@@ -62,5 +63,10 @@ public class Location
     public static bool LocationAvailable()
     {
         return Input.location.status == LocationServiceStatus.Running;
+    }
+
+    public static float GetCompassHeading()
+    {
+        return Input.compass.trueHeading;
     }
 }

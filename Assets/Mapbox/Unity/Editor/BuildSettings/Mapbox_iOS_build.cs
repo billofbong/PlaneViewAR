@@ -1,4 +1,4 @@
-﻿#if UNITY_IOS
+#if UNITY_IOS
 namespace Mapbox.Editor.Build
 {
 	using UnityEngine;
@@ -23,11 +23,7 @@ namespace Mapbox.Editor.Build
 
 				var file = File.ReadAllText(projPath);
 				proj.ReadFromString(file);
-#if UNITY_2019_1_OR_NEWER
 				string target = proj.GetUnityFrameworkTargetGuid();
-#else
-				string target = proj.TargetGuidByName("Unity-iPhone");
-#endif
 
 				var defaultIncludePath = "Mapbox/Core/Plugins/iOS/MapboxMobileEvents/include";
 				var includePaths = Directory.GetDirectories(Application.dataPath, "include", SearchOption.AllDirectories);

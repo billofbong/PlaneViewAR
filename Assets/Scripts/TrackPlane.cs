@@ -5,29 +5,82 @@ using System.Net;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using static OpenSky;
+using Mapbox.Map;
+using Mapbox.Unity.Map;
+using Mapbox.Utils;
 
 public class TrackPlane : MonoBehaviour
 {
     public int queryFrequency; // how many seconds between each query
     public int queryDistance; // distance to search in miles
+    public GameObject aircraftObject;
+    public GameObject mapObject;
 
     private float queryTimer; // time since last query
     private const float MILES_TO_LAT = 0.0144927536232f; // 1/69, One degree of latitude = ~69mi
     private const float MILES_TO_METERS = 1609.34f;
-    private List<Aircraft> allAircraft;
+    private const float METERS_TO_UNITS = 0.20f;
+    private Aircraft ours;
+    private Vector2 last_latlong;
+    private AbstractMap map;
+    private bool queryDone = false;
+    private Vector3 newPos;
+    private Vector3 startingPos;
+    private bool lerp = false;
+    private float oldTrack;
+    private float lerpCounter;
 
     void Start()
     {
-        allAircraft = new List<Aircraft>();
+        map = mapObject.GetComponent<AbstractMap>();
+        ours = StaticPlaneInfo.staticAircraft;
+        map.ResetMap();
+        map.Initialize(new Vector2d(ours.position.x, ours.position.y), 15);
+        aircraftObject.transform.Rotate(Vector3.up, ours.true_track);
+        Vector3 newPos = new Vector3(aircraftObject.transform.position.x, ours.altitude* METERS_TO_UNITS, aircraftObject.transform.position.z);
+        aircraftObject.transform.position = newPos;
     }
 
     void Update()
     {
+        if(lerp)
+        {
+            aircraftObject.transform.position = Vector3.Lerp(startingPos, newPos, lerpCounter);
+            aircraftObject.transform.eulerAngles = new Vector3(
+            aircraftObject.transform.eulerAngles.x,
+            Mathf.LerpAngle(oldTrack, ours.true_track, lerpCounter),
+            aircraftObject.transform.eulerAngles.z
+            );
+            lerpCounter += Time.deltaTime;
+            if(lerpCounter >= 1)
+            {
+                lerp = false;
+                lerpCounter = 0;
+            }
+        }
+        else
+            aircraftObject.transform.Translate(transform.forward * METERS_TO_UNITS * ours.velocity * Time.deltaTime);
+        aircraftObject.transform.Translate(transform.up * METERS_TO_UNITS * ours.vertical_rate * Time.deltaTime, Space.World);
         queryTimer += Time.deltaTime;
         if (queryTimer > queryFrequency)
         {
             queryTimer = 0;
-            StartCoroutine(Query(queryDistance, new Vector2(0, 0))); // TODO: PUT AIRCRAFT COORDINATES HERE
+            StartCoroutine(Query(queryDistance, ours.position));
+        }
+        if (queryDone)
+        {
+            aircraftObject.transform.eulerAngles = new Vector3(
+            aircraftObject.transform.eulerAngles.x,
+            ours.true_track,
+            aircraftObject.transform.eulerAngles.z
+            );
+            startingPos = aircraftObject.transform.position;
+            oldTrack = aircraftObject.transform.rotation.eulerAngles.y;
+            newPos = map.GeoToWorldPosition(new Vector2d(ours.position.x, ours.position.y));
+            newPos.y = ours.altitude * METERS_TO_UNITS;
+            lerp = true;
+            queryDone = false;
         }
     }
 
@@ -53,7 +106,7 @@ public class TrackPlane : MonoBehaviour
         {
             states = jsonResponse.Split(new[] { "states\":[" }, System.StringSplitOptions.None)[1];
         }
-        catch (System.IndexOutOfRangeException e)
+        catch (System.IndexOutOfRangeException)
         {
             yield break;
         }
@@ -62,29 +115,19 @@ public class TrackPlane : MonoBehaviour
         foreach (string x in aircraft)
         {
             string[] attributes = x.Replace("[", "").Replace("\"", "").Replace("]]}", "").Trim().Split(','); // remove [ " and ]]} from the strings then split into an array at ,
-            try
+            if (attributes[1] == ours.callsign)
             {
-                Aircraft a = allAircraft[allAircraft.FindIndex(y => y.callsign == attributes[1])];
-                a.position = new Vector2(float.Parse(attributes[6]), float.Parse(attributes[5])); // https://opensky-network.org/apidoc/rest.html
-                a.altitude = string.Equals(attributes[7], "null") || float.Parse(attributes[7]) < 7 ? 0 : float.Parse(attributes[7]); // sometimes these values are null (eg. if aircraft on ground)
-                a.velocity = string.Equals(attributes[9], "null") ? 0 : float.Parse(attributes[9]);
-                a.true_track = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]);
-                a.lastSeen = timeNow;
-            }
-            catch (System.ArgumentOutOfRangeException)
-            {
-                Aircraft a = new Aircraft
-                {
-                    callsign = attributes[1],
-                    position = new Vector2(float.Parse(attributes[6]), float.Parse(attributes[5])),
-                    altitude = string.Equals(attributes[7], "null") ? 0 : float.Parse(attributes[7]),
-                    velocity = string.Equals(attributes[9], "null") ? 0 : float.Parse(attributes[9]),
-                    true_track = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]),
-                    lastSeen = timeNow
-                };
-                allAircraft.Add(a);
+                ours.callsign = attributes[1];
+                last_latlong = ours.position;
+                ours.position = new Vector2(float.Parse(attributes[6]), float.Parse(attributes[5]));
+                ours.altitude = string.Equals(attributes[7], "null") ? 0 : float.Parse(attributes[7]);
+                ours.velocity = string.Equals(attributes[9], "null") ? 0 : float.Parse(attributes[9]);
+                ours.true_track = string.Equals(attributes[10], "null") ? 0 : float.Parse(attributes[10]);
+                ours.vertical_rate = string.Equals(attributes[11], "null") ? 0 : float.Parse(attributes[11]);
+                ours.lastSeen = timeNow;
             }
         }
+        queryDone = true;
     }
 
     /**
@@ -102,26 +145,6 @@ public class TrackPlane : MonoBehaviour
         bbox.minLong = center.y - distance / LengthOfLonDegreeAt(center.x);
         bbox.maxLong = center.y + distance / LengthOfLonDegreeAt(center.x);
         return bbox;
-    }
-
-    /**
-     * GetAircraftList()
-     * Returns: List<Aircraft>: All aircraft found by the latest query.
-     */
-    public List<Aircraft> GetAircraftList()
-    {
-        return allAircraft;
-    }
-
-    /**
-     * GetAircraftByCallsign()
-     * Returns: Aircraft: First aircraft in the list with a callsign that matches. Works with partial matches
-     * Parameters:
-     *     string callsign: The callsign to search for
-     */
-    public Aircraft GetAircraftByCallsign(string callsign)
-    {
-        return allAircraft.Find(x => x.callsign == callsign);
     }
 
     /**
@@ -148,7 +171,6 @@ public class TrackPlane : MonoBehaviour
         float brng = Mathf.Atan2(x, y);
         brng = Mathf.Rad2Deg * brng;
         brng = (brng + 360) % 360;
-        //brng = 360 - brng;
         return brng;
     }
 
@@ -160,14 +182,6 @@ public class TrackPlane : MonoBehaviour
                 (1 - Mathf.Cos((dest.y - current.y) * p)) / 2.0f;
 
         return 7917.6f * Mathf.Asin(Mathf.Sqrt(a)); // 2 * R; R = 3,958.8 mi
-    }
-
-    public class Aircraft
-    {
-        public string callsign;
-        public float altitude, velocity, true_track, vertical_rate, lastSeen;
-        public Vector2 position;
-        public Vector3 normalizedPosition;
     }
 
     private struct LatLongBBox
